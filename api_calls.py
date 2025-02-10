@@ -22,6 +22,13 @@ response = client.models.generate_content(
 )
 print(response.text)
 
+def gemini_call(code:str,prompt:str)->str:
+    response = client.models.generate_content(
+        model='gemini-2.0-flash',
+        contents=prompt+code,
+    )
+    return response.text
+
 # # import constants
 # import os
 # from openai import OpenAI
