@@ -4,7 +4,14 @@
 
 Initial Setup 
 1. Create an .env file in the folder.
+2. Format for the .env file will be provided below.
 2. Add your api keys of the genAI provider eg. gemini and openai.
+
+env file format
+
+OPENAI_API_KEY="Your api key"
+GEMINI_API_KEY="Your api key"
+
 
 Obtaining Api keys
 OpenAI

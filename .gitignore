@@ -1,3 +1,4 @@
 #Ignore files
 .env
 *.log
+Tasks.txt
