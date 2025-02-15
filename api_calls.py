@@ -12,15 +12,18 @@ class Instrument(enum.Enum):
   KEYBOARD = "Keyboard"
 
 # client = genai.Client(api_key="GEMINI_API_KEY")
-response = client.models.generate_content(
-    model='gemini-2.0-flash',
-    contents='What type of instrument is an oboe?',
-    config={
-        'response_mime_type': 'text/x.enum',
-        'response_schema': Instrument,
-    },
-)
-print(response.text)
+#*******************************************************************************
+#This call is crashing loggging module. 
+#*******************************************************************************
+# response = client.models.generate_content(
+#     model='gemini-2.0-flash',
+#     contents='What type of instrument is an oboe?',
+#     config={
+#         'response_mime_type': 'text/x.enum',
+#         'response_schema': Instrument,
+#     },
+# )
+# print(response.text)
 
 def gemini_call(code:str,prompt:str)->str:
     response = client.models.generate_content(
