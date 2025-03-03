@@ -1,1 +1,3 @@
 python-dotenv 
+tree_sitter
+google-generativeai
