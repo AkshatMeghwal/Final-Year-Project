@@ -8,6 +8,7 @@ from tree_sitter import Language, Parser, Node
 import re
 import json
 from logger import logging
+import shutil
 
 
 class Misc():
@@ -90,4 +91,11 @@ class Misc():
         output_lines = output.split("\n")
         if len(output_lines) > 2:
             output = "\n".join(output_lines[1:-1])
-        return output   
+        return output
+
+    @staticmethod
+    def clean_temp_folders(*folders: str):
+        """Clean up temporary folders."""
+        for folder in folders:
+            if path.exists(folder):
+                shutil.rmtree(folder)
