@@ -67,10 +67,10 @@
 </head>
 <body>
     <div class="container">
-        <h1>Upload a Folder</h1>
-        <p>Select a folder containing JavaScript files to generate docstrings automatically.</p>
+        <h1>Upload a Zip File</h1>
+        <p>Select a zip file containing JavaScript files to generate docstrings automatically.</p>
         <form action="/" method="post" enctype="multipart/form-data">
-            <input type="file" name="folder" webkitdirectory directory required>
+            <input type="file" name="zipfile" accept=".zip" required>
             <button type="submit">Upload and Process</button>
         </form>
     </div>

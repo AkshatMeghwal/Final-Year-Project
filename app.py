@@ -21,22 +21,22 @@ def index():
         os.makedirs(UPLOAD_FOLDER, exist_ok=True)
         os.makedirs(PROCESSED_FOLDER, exist_ok=True)
 
-        if "folder" not in request.files:
-            return "No folder uploaded", 400
-        folder = request.files["folder"]
-        folder_path = os.path.join(UPLOAD_FOLDER, folder.filename)
-        os.makedirs(os.path.dirname(folder_path), exist_ok=True)  # Ensure the directory exists
-        folder.save(folder_path)
+        if "zipfile" not in request.files:
+            return "No zip file uploaded", 400
+        zipfile = request.files["zipfile"]
+        zipfile_path = os.path.join(UPLOAD_FOLDER, zipfile.filename)
+        os.makedirs(os.path.dirname(zipfile_path), exist_ok=True)  # Ensure the directory exists
+        zipfile.save(zipfile_path)
 
         try:
-            # Process the uploaded folder
-            processed_folder_path = os.path.join(PROCESSED_FOLDER, os.path.splitext(folder.filename)[0])
-            logging.warning(f"Unpacking {folder_path} to {processed_folder_path}")
-            shutil.unpack_archive(folder_path, processed_folder_path)
+            # Process the uploaded zip file
+            processed_folder_path = os.path.join(PROCESSED_FOLDER, os.path.splitext(zipfile.filename)[0])
+            logging.warning(f"Unpacking {zipfile_path} to {processed_folder_path}")
+            shutil.unpack_archive(zipfile_path, processed_folder_path)
             process_js_files(processed_folder_path)
         except shutil.ReadError:
-            logging.error(f"Failed to unpack {folder_path}. Unsupported archive format.")
-            return "Unsupported archive format. Please upload a valid archive file.", 400
+            logging.error(f"Failed to unpack {zipfile_path}. Unsupported archive format.")
+            return "Unsupported archive format. Please upload a valid zip file.", 400
 
         # Create a zip file for download
         output_zip = os.path.join(PROCESSED_FOLDER, f"{os.path.basename(processed_folder_path)}.zip")
