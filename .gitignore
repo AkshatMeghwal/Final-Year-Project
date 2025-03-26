@@ -3,3 +3,4 @@
 *.log
 Tasks.txt
 __pycache__
+.venv
