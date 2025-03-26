@@ -4,6 +4,7 @@ import shutil
 import tempfile
 from utils import Misc
 from docstring import process_js_files
+from logger import logging
 
 app = Flask(__name__)
 UPLOAD_FOLDER = "uploaded_files"
@@ -27,10 +28,15 @@ def index():
         os.makedirs(os.path.dirname(folder_path), exist_ok=True)  # Ensure the directory exists
         folder.save(folder_path)
 
-        # Process the uploaded folder
-        processed_folder_path = os.path.join(PROCESSED_FOLDER, os.path.splitext(folder.filename)[0])
-        shutil.unpack_archive(folder_path, processed_folder_path)
-        process_js_files(processed_folder_path)
+        try:
+            # Process the uploaded folder
+            processed_folder_path = os.path.join(PROCESSED_FOLDER, os.path.splitext(folder.filename)[0])
+            logging.warning(f"Unpacking {folder_path} to {processed_folder_path}")
+            shutil.unpack_archive(folder_path, processed_folder_path)
+            process_js_files(processed_folder_path)
+        except shutil.ReadError:
+            logging.error(f"Failed to unpack {folder_path}. Unsupported archive format.")
+            return "Unsupported archive format. Please upload a valid archive file.", 400
 
         # Create a zip file for download
         output_zip = os.path.join(PROCESSED_FOLDER, f"{os.path.basename(processed_folder_path)}.zip")
