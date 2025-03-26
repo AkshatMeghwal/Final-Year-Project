@@ -9,7 +9,8 @@ import re
 import json
 from logger import logging
 import shutil
-
+import tree_sitter_javascript as tsjavascript
+from tree_sitter import Language, Parser
 
 class Misc():
     @staticmethod
@@ -120,6 +121,29 @@ class Misc():
         with open(output_filepath, "w", encoding="utf-8") as file:
             file.write(output)
     
+class CommentRemover:
+    def __init(self):
+        self._JS_LANGUAGE = Language("build/my-languages.so", "javascript")
+        self._parser = Parser()
+    def remove_comments_from_js(js_code):
+        """
+        Removes comments from the given JavaScript code using Tree-sitter.
+        """
+        parser = Parser(JS_LANGUAGE)
+        tree = parser.parse(bytes(js_code, "utf8"))
+        root_node = tree.root_node
+
+        def traverse_and_collect(node):
+            """
+            Recursively traverse the syntax tree and collect non-comment code.
+            """
+            if node.type in ["comment", "ERROR"]:
+                return ""
+            if len(node.children) == 0:
+                return js_code[node.start_byte:node.end_byte]
+            return "".join(traverse_and_collect(child) for child in node.children)
+
+        return traverse_and_collect(root_node)
 # class CommentRemover:
 #     """Class to handle comment removal"""
 
