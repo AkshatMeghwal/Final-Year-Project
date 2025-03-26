@@ -25,7 +25,7 @@ class AIConsts():
 
 class PromptPaths():
     """Prompt related paths"""
-    GAI_DOCSTRING_PROMPT = "prompts/gai_docstring_prompt.txt"
+    GAI_DOCSTRING_PROMPT = "prompts/gemini_js_docstring_prompt.txt"
 
 class AIPrompts():
     """Ai related Prompts"""

@@ -106,13 +106,6 @@ class gemini_ai:
         # Send the code content
         modelresp = chat_session.send_message(code)
         output_code_raw += modelresp.text
-        # chunk_sizes.append(len(modelresp.text))
-
-        # if len(output_code_raw) + AIConsts.MAX_DIFFERENCE < len(
-        #     fileprocessinginfo.ip_filedetails.content
-        # ):
-        #     output_code_raw = ""
-        #     chunk_sizes = []
         return output_code_raw
 
     def _start_chatwith_gemini(
@@ -128,10 +121,6 @@ class gemini_ai:
             fileprocessinginfo ( DocstringFileProcessingInfo ): Info of file to be proccessed
             modelprompt ( str ): GenAI model prompt
         """
-
-        # if fileprocessinginfo.modified_flag is True:
-        #     promptstart += " " + AIPrompts.MODIFICATION_PROMPT
-
         return aimodel.start_chat(
             history=[
                 {

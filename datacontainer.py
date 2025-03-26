@@ -8,5 +8,6 @@ class file_processing_info():
         self.js_files = []
         self.src_filepath = ""
         self.write_filepath = Misc.generate_write_filepath(filepath)
+        self.output_code_raw = ""
 
     

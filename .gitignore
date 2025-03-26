@@ -2,3 +2,4 @@
 .env
 *.log
 Tasks.txt
+__pycache__
