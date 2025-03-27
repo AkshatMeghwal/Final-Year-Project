@@ -1,5 +1,6 @@
 python-dotenv 
-tree_sitter
+tree-sitter
+tree-sitter-javascript
 google-generativeai
 dotenv
 Flask
