@@ -4,3 +4,6 @@
 Tasks.txt
 __pycache__
 .venv
+graph
+processed_files
+uploaded_files

@@ -123,10 +123,10 @@ class Misc():
     
 class CommentRemover:
     def __init__(self):
-        self._JS_LANGUAGE = Language("build/my-languages.so", "javascript")
-        self._parser = Parser(JS_LANGUAGE)
+        self._JS_LANGUAGE = Language(tsjavascript.language())
+        self._parser = Parser(self._JS_LANGUAGE)
 
-    def remove_comments_from_js(self,js_code):
+    def remove_comments_from_js(self, js_code):
         """
         Removes comments from the given JavaScript code using Tree-sitter.
         """

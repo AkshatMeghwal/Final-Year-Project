@@ -15,6 +15,9 @@ os.chmod(PROCESSED_FOLDER, 0o777)  # Grant full permissions
 
 @app.route("/", methods=["GET", "POST"])
 def index():
+    download_ready = False
+    download_filename = None
+
     if request.method == "POST":
         # Clear old files
         Misc.clean_temp_folders(UPLOAD_FOLDER, PROCESSED_FOLDER)
@@ -22,7 +25,8 @@ def index():
         os.makedirs(PROCESSED_FOLDER, exist_ok=True)
 
         if "zipfile" not in request.files:
-            return "No zip file uploaded", 400
+            return render_template("index.html", download_ready=False, error="No zip file uploaded")
+
         zipfile = request.files["zipfile"]
         zipfile_path = os.path.join(UPLOAD_FOLDER, zipfile.filename)
         os.makedirs(os.path.dirname(zipfile_path), exist_ok=True)  # Ensure the directory exists
@@ -34,25 +38,23 @@ def index():
             logging.warning(f"Unpacking {zipfile_path} to {processed_folder_path}")
             shutil.unpack_archive(zipfile_path, processed_folder_path)
             process_js_files(processed_folder_path)
+
+            # Create a zip file for download
+            output_zip = os.path.join(PROCESSED_FOLDER, f"{os.path.basename(processed_folder_path)}.zip")
+            with tempfile.TemporaryDirectory() as temp_dir:
+                temp_zip_base = os.path.join(temp_dir, os.path.basename(processed_folder_path))
+                shutil.make_archive(temp_zip_base, "zip", processed_folder_path)
+                temp_zip_path = f"{temp_zip_base}.zip"
+                shutil.move(temp_zip_path, output_zip)
+
+            download_ready = True
+            download_filename = os.path.basename(output_zip)
+
         except shutil.ReadError:
             logging.error(f"Failed to unpack {zipfile_path}. Unsupported archive format.")
-            return "Unsupported archive format. Please upload a valid zip file.", 400
+            return render_template("index.html", download_ready=False, error="Unsupported archive format. Please upload a valid zip file.")
 
-        # Create a zip file for download
-        output_zip = os.path.join(PROCESSED_FOLDER, f"{os.path.basename(processed_folder_path)}.zip")
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_zip_base = os.path.join(temp_dir, os.path.basename(processed_folder_path))
-            shutil.make_archive(temp_zip_base, "zip", processed_folder_path)
-            temp_zip_path = f"{temp_zip_base}.zip"
-            shutil.move(temp_zip_path, output_zip)
-
-        print(f"Processed folder path: {processed_folder_path}")
-        print(f"Output zip path: {output_zip}")
-        print(f"Permissions: {os.stat(PROCESSED_FOLDER)}")
-
-        return redirect(url_for("download", filename=os.path.basename(output_zip)))
-
-    return render_template("index.html")
+    return render_template("index.html", download_ready=download_ready, download_filename=download_filename)
 
 @app.route("/download/<filename>")
 def download(filename):
