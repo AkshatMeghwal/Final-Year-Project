@@ -22,6 +22,9 @@ def generate_context(dependency_tree: nx.DiGraph, all_functions: list[dict]):
         list: The updated list of all functions with generated contexts.
     """
     # Create a mapping of function names to their corresponding function objects
+    prompt_start = constants.AIPrompts.GAI_FUNCTION_DOCSTRING_PROMPT
+    prompt_model = constants.AIPrompts.GAI_FUNCTION_DOCSTRING_MODEL_PROMPT
+    gemini_ai = api_calls.gemini_ai()
     function_map = {func["name"]: func for func in all_functions}
 
     def dfs(node):
@@ -36,11 +39,22 @@ def generate_context(dependency_tree: nx.DiGraph, all_functions: list[dict]):
         child_contexts = []
         for child in dependency_tree.successors(node):
             child_context = dfs(child)  # Recursively generate context for the child
-            child_contexts.append(child_context)
-
+            if child_context:  # Ensure child_context is valid before appending
+                child_contexts.append(child_context)
+        
         # Combine the current function's code with the contexts of its children
-        # combined_context = AI_generated_context(current_code, child_contexts)
-        combined_context = "Context for function " + function_map[node]["name"]
+        
+            current_code = "\n".join(child_contexts) + "\n" + current_code
+        if child_contexts is not None:
+            attached_code_prompt = Misc.create_function_prompt(child_contexts, current_code)
+        else:
+            attached_code_prompt = current_code
+        combined_context = gemini_ai.get_outputcoderaw_geminiai(
+            prompt_start, attached_code_prompt, prompt_model
+        )
+        combined_context = "\n".join(combined_context.split("\n")[1:])  # Trim the first line
+        logging.info(f"{function_map[node]['name']} ----  context: {combined_context}")
+        # combined_context = "Context for function " + function_map[node]["name"]
         function_map[node]["context"] = combined_context
         logging.info(f"Generated context for {node}")
         return combined_context
@@ -73,7 +87,6 @@ def process_js_files(folder_directory: str):
     logging.info("Dependency Tree has been built successfully.")
     
     context_funcs = generate_context(dependency_tree, funcs)
-    print(context_funcs)
     logging.info("Context generation completed successfully.")
     
     prompt_start = constants.AIPrompts.GAI_DOCSTRING_PROMPT
@@ -85,14 +98,20 @@ def process_js_files(folder_directory: str):
 
     for fileprocessinginfo in files:
         fileprocessinginfo.raw_code_no_comment = comment_remover.remove_comments_from_js(fileprocessinginfo.raw_code)
-        output_code_raw = gemini_ai.get_outputcoderaw_geminiai(
-            prompt_start, fileprocessinginfo.raw_code, prompt_model
-        )
-        output_code_raw = Misc.output_cleaner(output_code_raw)
+        output_code_raw = fileprocessinginfo.raw_code
+        # output_code_raw = Misc.output_cleaner(output_code_raw)
         fileprocessinginfo.output_code_raw = output_code_raw
         
         fileprocessinginfo.output_code_raw_no_comment = comment_remover.remove_comments_from_js(output_code_raw)
         if fileprocessinginfo.raw_code_no_comment == fileprocessinginfo.output_code_raw_no_comment:
+            # Insert context above each function in the file
+            for func in context_funcs:
+                function_name = func["name"]
+                function_context = func["context"]
+                print(function_name, ":", function_context)
+                fileprocessinginfo.output_code_raw = Misc.insert_context_above_function(
+                    fileprocessinginfo.output_code_raw, function_name, function_context
+                )
             with open(fileprocessinginfo.write_filepath, "w") as f:
                 f.write(fileprocessinginfo.output_code_raw)
         else:

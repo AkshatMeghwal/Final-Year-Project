@@ -100,6 +100,17 @@ class Misc():
         for folder in folders:
             if path.exists(folder):
                 shutil.rmtree(folder)
+
+    @staticmethod
+    def create_function_prompt(childs:List,code:str):
+        """Clean up temporary folders."""
+        attached_prompt:str=""
+        for text in childs:
+            attached_prompt+=text
+            attached_prompt+="\n"
+        attached_prompt+=code
+        return attached_prompt
+
     
     @staticmethod
     def write_output_in_structure(output: str, original_filepath: str, base_input_dir: str, base_output_dir: str) -> None:
@@ -120,6 +131,35 @@ class Misc():
         
         with open(output_filepath, "w", encoding="utf-8") as file:
             file.write(output)
+    
+    @staticmethod
+    def insert_context_above_function(code: str, function_name: str, context: str) -> str:
+        """
+        Inserts the context directly above the specified function in the code without a line gap.
+
+        Args:
+            code (str): The JavaScript code.
+            function_name (str): The name of the function to insert the context above.
+            context (str): The context to insert.
+
+        Returns:
+            str: The updated code with the context inserted.
+        """
+        # Split the code into lines
+        lines = code.split("\n")
+        updated_lines = []
+        function_pattern = re.compile(rf"function\s+{re.escape(function_name)}\s*\(")
+        context_inserted = False  # Track if the context has been inserted
+
+        for line in lines:
+            # Check if the line contains the function definition
+            if not context_inserted and function_pattern.search(line):
+                # Insert the context directly above the function without a line gap
+                updated_lines.append(context)
+                context_inserted = True  # Mark context as inserted
+            updated_lines.append(line)
+
+        return "\n".join(updated_lines)
     
 class CommentRemover:
     def __init__(self):
