@@ -39,6 +39,7 @@ def extract_user_defined_functions(js_file):
             "name": function_name.strip(),
             "params": [param.strip() for param in function_params],
             "code": function_code.strip(),
+            "code_with_docstring": "",
             "context": "",
             "calls": []  
         })
