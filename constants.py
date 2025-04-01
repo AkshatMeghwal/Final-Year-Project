@@ -26,13 +26,19 @@ class AIConsts():
 class PromptPaths():
     """Prompt related paths"""
     GAI_DOCSTRING_PROMPT = "prompts/gemini_js_docstring_prompt.txt"
+    GAI_FUNCTION_DOCSTRING_PROMPT = "prompts/gemini_js_single_function_prompt.txt"
 
 class AIPrompts():
     """Ai related Prompts"""
     GAI_DOCSTRING_PROMPT =Misc.get_content(PromptPaths.GAI_DOCSTRING_PROMPT)
+    GAI_FUNCTION_DOCSTRING_PROMPT= Misc.get_content(PromptPaths.GAI_FUNCTION_DOCSTRING_PROMPT)
     GAI_DOCSTRING_MODEL_PROMPT = (
         "Understood, I will create function level docstrings for the code"
         " without making any changes to the code logic."
+    )
+    GAI_FUNCTION_DOCSTRING_MODEL_PROMPT = (
+        "Understood, I will create function level docstring for the given"
+        "code using the provided contexts."
     )
     # GAI_COMMENT_MODEL_PROMPT = (
     #     "Yes, I understand the prompt and the guidelines for adding informative comments to code files."
