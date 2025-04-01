@@ -76,29 +76,29 @@ def process_js_files(folder_directory: str):
     print(context_funcs)
     logging.info("Context generation completed successfully.")
     
-    # prompt_start = constants.AIPrompts.GAI_DOCSTRING_PROMPT
-    # prompt_model = constants.AIPrompts.GAI_DOCSTRING_MODEL_PROMPT
-    # gemini_ai = api_calls.gemini_ai()
+    prompt_start = constants.AIPrompts.GAI_DOCSTRING_PROMPT
+    prompt_model = constants.AIPrompts.GAI_DOCSTRING_MODEL_PROMPT
+    gemini_ai = api_calls.gemini_ai()
 
-    # # # Create an instance of CommentRemover
-    # comment_remover = CommentRemover()
+    # # Create an instance of CommentRemover
+    comment_remover = CommentRemover()
 
-    # for fileprocessinginfo in files:
-    #     fileprocessinginfo.raw_code_no_comment = comment_remover.remove_comments_from_js(fileprocessinginfo.raw_code)
-    #     output_code_raw = gemini_ai.get_outputcoderaw_geminiai(
-    #         prompt_start, fileprocessinginfo.raw_code, prompt_model
-    #     )
-    #     output_code_raw = Misc.output_cleaner(output_code_raw)
-    #     fileprocessinginfo.output_code_raw = output_code_raw
+    for fileprocessinginfo in files:
+        fileprocessinginfo.raw_code_no_comment = comment_remover.remove_comments_from_js(fileprocessinginfo.raw_code)
+        output_code_raw = gemini_ai.get_outputcoderaw_geminiai(
+            prompt_start, fileprocessinginfo.raw_code, prompt_model
+        )
+        output_code_raw = Misc.output_cleaner(output_code_raw)
+        fileprocessinginfo.output_code_raw = output_code_raw
         
-    #     fileprocessinginfo.output_code_raw_no_comment = comment_remover.remove_comments_from_js(output_code_raw)
-    #     if fileprocessinginfo.raw_code_no_comment == fileprocessinginfo.output_code_raw_no_comment:
-    #         with open(fileprocessinginfo.write_filepath, "w") as f:
-    #             f.write(fileprocessinginfo.output_code_raw)
-    #     else:
-    #         logging.warning("Invalid code received for %s", fileprocessinginfo.filepath)
+        fileprocessinginfo.output_code_raw_no_comment = comment_remover.remove_comments_from_js(output_code_raw)
+        if fileprocessinginfo.raw_code_no_comment == fileprocessinginfo.output_code_raw_no_comment:
+            with open(fileprocessinginfo.write_filepath, "w") as f:
+                f.write(fileprocessinginfo.output_code_raw)
+        else:
+            logging.warning("Invalid code received for %s", fileprocessinginfo.filepath)
 
-    # logging.info("Output written to files successfully.")
+    logging.info("Output written to files successfully.")
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
