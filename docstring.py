@@ -10,49 +10,47 @@ from datacontainer import file_processing_info
 from utils import CommentRemover
 import networkx as nx
 
-def generate_context(graph: nx.DiGraph, all_functions: list[dict]):
+def generate_context(dependency_tree: nx.DiGraph, all_functions: list[dict]):
     """
-    Performs DFS on the dependency graph and generates context for nodes.
+    Performs DFS on the dependency tree and generates context for each function.
 
     Parameters:
-        graph (networkx.DiGraph): The dependency graph.
+        dependency_tree (networkx.DiGraph): The dependency graph of functions.
         all_functions (list): A list of all functions with their details.
 
     Returns:
-        dict: The updated context map with generated contexts.
+        list: The updated list of all functions with generated contexts.
     """
     # Create a mapping of function names to their corresponding function objects
     function_map = {func["name"]: func for func in all_functions}
 
     def dfs(node):
         # If the context for this node is already generated, skip it
-        if function_map[node]["context"]:
+        if function_map[node]["context"] != "":
             return function_map[node]["context"]
 
-        # Get all children (successors) of the current node
-        children = list(graph.successors(node))
+        # Get the code of the current function
+        current_code = function_map[node]["code"]
 
-        # Check if all children have their context generated
-        for child in children:
-            if not function_map[child]["context"]:
-                dfs(child)  # Recursively generate context for the child
+        # Get the contexts of all child functions (successors)
+        child_contexts = []
+        for child in dependency_tree.successors(node):
+            child_context = dfs(child)  # Recursively generate context for the child
+            child_contexts.append(child_context)
 
-        # Generate context for the current node if it is a leaf or all children have context
-        if not children or all(function_map[child]["context"] for child in children):
-            function_map[node]["context"] = f"Context for {node}"  # Replace with actual context generation logic
-            logging.info(f"Generated context for {node}")
-        else:
-            logging.info(f"Skipped context generation for {node} (waiting for children)")
-
-        return function_map[node]["context"]
+        # Combine the current function's code with the contexts of its children
+        # combined_context = AI_generated_context(current_code, child_contexts)
+        combined_context = "Context for function " + function_map[node]["name"]
+        function_map[node]["context"] = combined_context
+        logging.info(f"Generated context for {node}")
+        return combined_context
 
     # Perform DFS for all nodes in the graph
-    for node in list(graph.nodes):
+    for node in list(dependency_tree.nodes):
         dfs(node)
 
     # Return the updated all_functions list with contexts
     return all_functions
-
 
 def process_js_files(folder_directory: str):
     """Process all JavaScript files in the given folder."""
@@ -74,31 +72,33 @@ def process_js_files(folder_directory: str):
     
     logging.info("Dependency Tree has been built successfully.")
     
-    # generate_context(dependency_tree, {})
+    context_funcs = generate_context(dependency_tree, funcs)
+    print(context_funcs)
     logging.info("Context generation completed successfully.")
-    prompt_start = constants.AIPrompts.GAI_DOCSTRING_PROMPT
-    prompt_model = constants.AIPrompts.GAI_DOCSTRING_MODEL_PROMPT
-    gemini_ai = api_calls.gemini_ai()
+    
+    # prompt_start = constants.AIPrompts.GAI_DOCSTRING_PROMPT
+    # prompt_model = constants.AIPrompts.GAI_DOCSTRING_MODEL_PROMPT
+    # gemini_ai = api_calls.gemini_ai()
 
-    # # Create an instance of CommentRemover
-    comment_remover = CommentRemover()
+    # # # Create an instance of CommentRemover
+    # comment_remover = CommentRemover()
 
-    for fileprocessinginfo in files:
-        fileprocessinginfo.raw_code_no_comment = comment_remover.remove_comments_from_js(fileprocessinginfo.raw_code)
-        output_code_raw = gemini_ai.get_outputcoderaw_geminiai(
-            prompt_start, fileprocessinginfo.raw_code, prompt_model
-        )
-        output_code_raw = Misc.output_cleaner(output_code_raw)
-        fileprocessinginfo.output_code_raw = output_code_raw
+    # for fileprocessinginfo in files:
+    #     fileprocessinginfo.raw_code_no_comment = comment_remover.remove_comments_from_js(fileprocessinginfo.raw_code)
+    #     output_code_raw = gemini_ai.get_outputcoderaw_geminiai(
+    #         prompt_start, fileprocessinginfo.raw_code, prompt_model
+    #     )
+    #     output_code_raw = Misc.output_cleaner(output_code_raw)
+    #     fileprocessinginfo.output_code_raw = output_code_raw
         
-        fileprocessinginfo.output_code_raw_no_comment = comment_remover.remove_comments_from_js(output_code_raw)
-        if fileprocessinginfo.raw_code_no_comment == fileprocessinginfo.output_code_raw_no_comment:
-            with open(fileprocessinginfo.write_filepath, "w") as f:
-                f.write(fileprocessinginfo.output_code_raw)
-        else:
-            logging.warning("Invalid code received for %s", fileprocessinginfo.filepath)
+    #     fileprocessinginfo.output_code_raw_no_comment = comment_remover.remove_comments_from_js(output_code_raw)
+    #     if fileprocessinginfo.raw_code_no_comment == fileprocessinginfo.output_code_raw_no_comment:
+    #         with open(fileprocessinginfo.write_filepath, "w") as f:
+    #             f.write(fileprocessinginfo.output_code_raw)
+    #     else:
+    #         logging.warning("Invalid code received for %s", fileprocessinginfo.filepath)
 
-    logging.info("Output written to files successfully.")
+    # logging.info("Output written to files successfully.")
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

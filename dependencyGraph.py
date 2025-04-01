@@ -88,7 +88,6 @@ def build_dependency_graph(files: list[file_processing_info]):
         for called_func in called_funcs:
             graph.add_edge(func["name"], called_func)  # Add an edge from the current function to the called function
             
-    print(all_functions)
     return graph, all_functions  
 
 
