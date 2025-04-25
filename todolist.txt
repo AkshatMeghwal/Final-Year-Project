@@ -1,0 +1,4 @@
+1. token counting
+2. Multi api call
+3. Front end
+4. Validation (shayad koi bug tha...)
