@@ -110,6 +110,7 @@ class gemini_ai:
             output_code_raw += modelresp.text
         except google.api_core.exceptions.ResourceExhausted as e:
             logging.warning("Rate limit exceeded, retrying after 60 seconds: %s", e)
+            logging.info("Waiting for 60 seconds before retrying...")
             time.sleep(60)
             try:
                 # Retry the call
