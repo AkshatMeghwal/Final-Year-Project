@@ -161,6 +161,34 @@ class Misc():
 
         return "\n".join(updated_lines)
     
+    @staticmethod
+    def highlight_changes(original: str, modified: str) -> str:
+        """
+        Highlights the differences between the original and modified code.
+        Added lines are highlighted in green, and removed lines are highlighted in red.
+
+        Args:
+            original (str): The original code.
+            modified (str): The modified code.
+
+        Returns:
+            str: The HTML-formatted string with highlighted changes.
+        """
+        from difflib import Differ
+        differ = Differ()
+        diff = list(differ.compare(original.splitlines(), modified.splitlines()))
+        highlighted = []
+
+        for line in diff:
+            if line.startswith("+ "):  # Added line
+                highlighted.append(f'<span class="added">{line[2:]}</span>')
+            elif line.startswith("- "):  # Removed line
+                highlighted.append(f'<span class="removed">{line[2:]}</span>')
+            else:  # Unchanged line
+                highlighted.append(line[2:])
+
+        return "<br>".join(highlighted)
+
 class CommentRemover:
     def __init__(self):
         self._JS_LANGUAGE = Language(tsjavascript.language())
@@ -183,3 +211,40 @@ class CommentRemover:
             return "".join(traverse_and_collect(child) for child in node.children)
 
         return traverse_and_collect(root_node)
+
+def extract_user_defined_functions_from_code(code: str):
+    """
+    Extracts user-defined functions from JavaScript code.
+
+    Args:
+        code (str): The JavaScript code.
+
+    Returns:
+        list: A list of dictionaries, each representing a function with `name`, `code`, and `context`.
+    """
+    import re
+
+    function_pattern = re.compile(
+        r'function\s+(?P<name>\w+)\s*\((?P<params>[^)]*)\)\s*{(?P<body>[^}]*)}'  # Matches traditional functions
+        r'|(?P<arrow_name>\w+)\s*=\s*\((?P<arrow_params>[^)]*)\)\s*=>\s*{(?P<arrow_body>[^}]*)}'  # Matches arrow functions
+    )
+    matches = function_pattern.finditer(code)
+
+    functions = []
+    for match in matches:
+        if match.group("name"):  # Traditional function
+            func_name = match.group("name")
+            func_code = f"function {func_name}({match.group('params')}) {{{match.group('body')}}}"
+        elif match.group("arrow_name"):  # Arrow function
+            func_name = match.group("arrow_name")
+            func_code = f"{func_name} = ({match.group('arrow_params')}) => {{{match.group('arrow_body')}}}"
+        else:
+            continue
+
+        functions.append({
+            "name": func_name.strip(),
+            "code": func_code.strip(),
+            "context": "",  # Context can be added later if needed
+        })
+
+    return functions

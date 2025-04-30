@@ -66,9 +66,27 @@ def extract_function_calls(func, all_funcs):
     return called_functions
 
 
+def get_graph_roots(graph):
+    """
+    Identifies the root nodes of all disjoint graphs in the dependency graph.
+
+    Parameters:
+        graph (networkx.DiGraph): The dependency graph.
+
+    Returns:
+        list: A list of root nodes for all disjoint graphs.
+    """
+    roots = []
+    for node in graph.nodes:
+        if graph.in_degree(node) == 0:  # Nodes with no incoming edges are roots
+            roots.append(node)
+    return roots
+
+
 def build_dependency_graph(files: list[file_processing_info]):
     """
-    Builds a dependency graph of user-defined functions across multiple files.
+    Builds a dependency graph of user-defined functions across multiple files
+    and identifies the roots of all disjoint graphs.
     """
     all_functions = []  # List to store all functions from all files
 
@@ -84,11 +102,12 @@ def build_dependency_graph(files: list[file_processing_info]):
     # Add edges based on function calls
     for func in all_functions:
         called_funcs = extract_function_calls(func, all_functions)
-        
         for called_func in called_funcs:
             graph.add_edge(func["name"], called_func)  # Add an edge from the current function to the called function
-            
-    return graph, all_functions  
+
+    # Get roots of all disjoint graphs
+    roots = get_graph_roots(graph)
+    return graph, all_functions, roots
 
 
 def plot_dependency_graph(graph, file_name, folder_name="graph"):
@@ -100,7 +119,7 @@ def plot_dependency_graph(graph, file_name, folder_name="graph"):
         file_name (str): The name of the file to save the graph as.
         folder_name (str): The name of the folder to save the graph in. Defaults to "graph".
     """
-    # Create the specified folder if it doesn't exist
+    folder_name = './graph'  # Ensure the graph is saved in the correct folder
     os.makedirs(folder_name, exist_ok=True)
 
     # Plot the graph

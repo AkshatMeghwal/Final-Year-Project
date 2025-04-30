@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Changes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .file-header {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        .function-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .function-code, .function-context {
+            width: 48%;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            font-family: monospace;
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .slider-container label {
+            margin-left: 10px;
+        }
+        .navigation-buttons {
+            margin-top: 20px;
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .next {
+            background-color: #007bff;
+            color: white;
+        }
+        .download {
+            background-color: #4caf50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Review Changes</h1>
+    {% if graphs %}
+    <div id="file-container">
+        <div class="file-header">File: <span id="file-name"></span></div>
+        <div id="functions-container"></div>
+    </div>
+    <div class="navigation-buttons">
+        <button id="prev-button" class="next" onclick="navigateFile(-1)" disabled>Previous</button>
+        <button id="next-button" class="next" onclick="navigateFile(1)">Next</button>
+        <button id="download-button" class="download" style="display: none;" onclick="download()">Download</button>
+    </div>
+    {% else %}
+    <p>No files available for review.</p>
+    {% endif %}
+
+    <script>
+        const files = {{ graphs | tojson | default('{}') }};
+        console.log("Files received from backend:", files); // Debugging log
+        let currentFileIndex = 0;
+
+        function renderFile() {
+            const fileKeys = Object.keys(files);
+            console.log("File keys:", fileKeys); // Debugging log
+            if (fileKeys.length === 0) {
+                document.getElementById("file-container").innerHTML = "<p>No files available for review.</p>";
+                return;
+            }
+
+            const fileName = fileKeys[currentFileIndex];
+            const functions = files[fileName];
+
+            if (Array.isArray(functions) && functions.length > 0) {
+                renderFunctions(fileName, functions);
+            } else {
+                document.getElementById("file-container").innerHTML = "<p>No functions available in this file.</p>";
+            }
+
+            // Update navigation buttons
+            updateNavigationButtons(fileKeys);
+        }
+
+        function renderFunctions(fileName, functions) {
+            document.getElementById("file-name").textContent = fileName;
+            const functionsContainer = document.getElementById("functions-container");
+            functionsContainer.innerHTML = "";
+
+            functions.forEach(func => {
+                const functionDiv = document.createElement("div");
+                functionDiv.className = "function-container";
+
+                const functionCode = document.createElement("div");
+                functionCode.className = "function-code";
+                functionCode.textContent = func.code || "No code available"; // Ensure code is displayed
+
+                const functionContext = document.createElement("div");
+                functionContext.className = "function-context";
+                functionContext.innerHTML = `
+                    <textarea id="context-${func.name}">${func.context || ""}</textarea>
+                    <div class="slider-container">
+                        <input type="checkbox" id="toggle-${func.name}" checked>
+                        <label for="toggle-${func.name}">Add Context</label>
+                    </div>
+                `;
+
+                functionDiv.appendChild(functionCode);
+                functionDiv.appendChild(functionContext);
+                functionsContainer.appendChild(functionDiv);
+            });
+        }
+
+        function updateNavigationButtons(fileKeys) {
+            const prevButton = document.getElementById("prev-button");
+            const nextButton = document.getElementById("next-button");
+            const downloadButton = document.getElementById("download-button");
+
+            if (currentFileIndex === fileKeys.length - 1) {
+                prevButton.style.display = "inline-block";
+                nextButton.style.display = "none";
+                downloadButton.style.display = "inline-block";
+            }
+            else if (currentFileIndex === 0) {
+                prevButton.style.display = "none";
+                nextButton.style.display = "inline-block";
+                downloadButton.style.display = "none";
+            }
+            // On intermediate pages
+            else {
+                prevButton.style.display = "inline-block";
+                nextButton.style.display = "inline-block";
+                downloadButton.style.display = "none";
+            }
+        }
+
+        function navigateFile(direction) {
+            currentFileIndex += direction;
+            renderFile();
+        }
+
+        function download() {
+            fetch("/finalize", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ decisions: collectDecisions() }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.download_url) {
+                    window.location.href = data.download_url;
+                }
+            });
+        }
+
+        function collectDecisions() {
+            const fileKeys = Object.keys(files);
+            const decisions = {};
+
+            fileKeys.forEach(fileName => {
+                decisions[fileName] = {};
+                const functions = files[fileName];
+
+                functions.forEach(func => {
+                    const toggle = document.getElementById(`toggle-${func.name}`);
+                    const contextBox = document.getElementById(`context-${func.name}`);
+                    decisions[fileName][func.name] = {
+                        action: toggle && toggle.checked ? "add" : "skip",
+                        context: contextBox ? contextBox.value : "",
+                    };
+                });
+            });
+            return decisions;
+        }
+
+        if (Object.keys(files).length > 0) {
+            renderFile();
+        }
+    </script>
+</body>
+</html>
