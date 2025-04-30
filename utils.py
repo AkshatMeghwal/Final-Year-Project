@@ -32,20 +32,20 @@ class Misc():
         except OSError:
             logging.exception(
                 "Failed to read file. '%s'",
-                filepath.replace(filepath),
+                filepath.replace(filepath, ""),  # Fixed: Added the second argument
             )
             return codefile_content
         except UnicodeDecodeError:
             logging.exception(
                 "Failed to read file. '%s'",
-                filepath.replace(filepath),
+                filepath.replace(filepath, ""),  # Fixed: Added the second argument
             )
             return codefile_content
 
-        if len(codefile_content) == 0:
+        if len(codefile_content )==0:
             logging.warning(
                 "Empty file. '%s'",
-                filepath.replace(filepath),
+                filepath.replace(filepath, ""),  # Fixed: Added the second argument
             )
 
         return codefile_content

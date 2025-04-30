@@ -109,6 +109,7 @@ def process_js_files(folder_directory: str, review_mode: bool = False):
     
     # Build the dependency graph
     dependency_tree, funcs, roots = build_dependency_graph(files)
+    logging.critical(f"There are total of  %d functions.",funcs.count)
     print(roots)
     plot_dependency_graph(dependency_tree, "dependency_graph.png", folder_name='./graph')
     logging.info("Dependency Graph has been built successfully.")
