@@ -1,5 +1,6 @@
 import enum
 import logging.config
+import time
 from constants import AIConsts, AIPrompts ,GeminiAIReqKeys,GeminiAIAPIRoles
 from logger import logging
 # from google import genai
@@ -108,8 +109,15 @@ class gemini_ai:
             modelresp = chat_session.send_message(code)
             output_code_raw += modelresp.text
         except google.api_core.exceptions.ResourceExhausted as e:
-            logging.error("Rate limit exceeded: %s", e)
-            raise RuntimeError("Rate limit exceeded. Please try again later.") from e
+            logging.warning("Rate limit exceeded, retrying after 60 seconds: %s", e)
+            time.sleep(60)
+            try:
+                # Retry the call
+                modelresp = chat_session.send_message(code)
+                output_code_raw += modelresp.text
+            except google.api_core.exceptions.ResourceExhausted as e:
+                logging.error("Rate limit exceeded again: %s", e)
+                return ""  # Return empty string if retry fails
         except Exception as e:
             logging.error("An error occurred while generating output: %s", e)
             raise RuntimeError("Failed to generate output.") from e
