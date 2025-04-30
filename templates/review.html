@@ -90,18 +90,21 @@
             const fileName = fileKeys[currentFileIndex];
             const functions = files[fileName];
 
+            // Update the file name at the top
+            document.getElementById("file-name").textContent = fileName;
+
+            // Render only the functions of the current file
             if (Array.isArray(functions) && functions.length > 0) {
-                renderFunctions(fileName, functions);
+                renderFunctions(functions);
             } else {
-                document.getElementById("file-container").innerHTML = "<p>No functions available in this file.</p>";
+                document.getElementById("functions-container").innerHTML = "<p>No functions available in this file.</p>";
             }
 
             // Update navigation buttons
             updateNavigationButtons(fileKeys);
         }
 
-        function renderFunctions(fileName, functions) {
-            document.getElementById("file-name").textContent = fileName;
+        function renderFunctions(functions) {
             const functionsContainer = document.getElementById("functions-container");
             functionsContainer.innerHTML = "";
 

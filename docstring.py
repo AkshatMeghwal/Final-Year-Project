@@ -9,6 +9,7 @@ from utils import Misc
 from datacontainer import file_processing_info
 from utils import CommentRemover
 import networkx as nx
+import matplotlib.pyplot as plt
 
 def generate_context(dependency_tree: nx.DiGraph, all_functions: list[dict], roots: list):
     """
@@ -55,11 +56,43 @@ def generate_context(dependency_tree: nx.DiGraph, all_functions: list[dict], roo
         return combined_context
 
     # Perform DFS for all root nodes in the graph
+    visited = set()
     for root in roots:
-        dfs(root)
+        if root not in visited:
+            dfs(root)
+            visited.add(root)
+
+    # Ensure all nodes are visited in case of disconnected graphs
+    for node in dependency_tree.nodes:
+        if node not in visited:
+            dfs(node)
 
     # Return the updated all_functions list with contexts
     return all_functions
+
+def plot_dependency_graph(graph, file_name, folder_name="graph"):
+    """
+    Plots the combined dependency graph using NetworkX and saves it to a file.
+    
+    Parameters:
+        graph (networkx.DiGraph): The dependency graph to plot.
+        file_name (str): The name of the file to save the graph as.
+        folder_name (str): The name of the folder to save the graph in. Defaults to "graph".
+    """
+    folder_name = './graph'  # Ensure the graph is saved in the correct folder
+    os.makedirs(folder_name, exist_ok=True)
+
+    # Plot the graph
+    plt.figure(figsize=(12, 8))
+    pos = nx.spring_layout(graph)
+    nx.draw(graph, pos, with_labels=True, node_size=2000, node_color="lightblue", font_size=10, font_weight="bold", edge_color="gray")
+    plt.title("Combined Function Dependency Graph")
+
+    # Save the graph to the specified file
+    file_path = os.path.join(folder_name, file_name)
+    plt.savefig(file_path)
+    plt.close()  # Close the plot to free memory
+    logging.info(f"Graph saved to {file_path}")
 
 def process_js_files(folder_directory: str, review_mode: bool = False):
     """Process all JavaScript files in the given folder."""
@@ -76,6 +109,7 @@ def process_js_files(folder_directory: str, review_mode: bool = False):
     
     # Build the dependency graph
     dependency_tree, funcs, roots = build_dependency_graph(files)
+    print(roots)
     plot_dependency_graph(dependency_tree, "dependency_graph.png", folder_name='./graph')
     logging.info("Dependency Graph has been built successfully.")
     

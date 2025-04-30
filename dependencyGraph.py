@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 def extract_user_defined_functions(js_file):
     """
     Extracts all user-defined functions from a JavaScript file, including their names, parameters, and code,
-    and represents them as JSON objects with keys: name, params, and code.
+    and represents them as JSON objects with keys: name, params, code, and file_path.
     """
     with open(js_file, 'r') as f:
         code = f.read()
@@ -34,14 +34,15 @@ def extract_user_defined_functions(js_file):
         else:
             continue
 
-        # Append the function as a JSON object
+        # Append the function as a JSON object with the file path
         functions.append({
             "name": function_name.strip(),
             "params": [param.strip() for param in function_params],
             "code": function_code.strip(),
             "code_with_docstring": "",
             "context": "",
-            "calls": []  
+            "calls": [],
+            "file_path": js_file  # Add the file path
         })
 
     return functions
@@ -80,6 +81,13 @@ def get_graph_roots(graph):
     for node in graph.nodes:
         if graph.in_degree(node) == 0:  # Nodes with no incoming edges are roots
             roots.append(node)
+
+    # Include isolated nodes (nodes with no edges at all)
+    isolated_nodes = list(nx.isolates(graph))
+    roots.extend(isolated_nodes)
+
+    # Remove duplicates in case isolated nodes are already included
+    roots = list(set(roots))
     return roots
 
 
@@ -101,12 +109,14 @@ def build_dependency_graph(files: list[file_processing_info]):
 
     # Add edges based on function calls
     for func in all_functions:
+        print(f"Processing function: {func['name']}")
         called_funcs = extract_function_calls(func, all_functions)
         for called_func in called_funcs:
             graph.add_edge(func["name"], called_func)  # Add an edge from the current function to the called function
 
     # Get roots of all disjoint graphs
     roots = get_graph_roots(graph)
+    print(roots)
     return graph, all_functions, roots
 
 

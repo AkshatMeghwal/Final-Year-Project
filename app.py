@@ -53,22 +53,21 @@ def index():
             # Transform the data structure for the frontend
             changes_for_review = {}
             for file_path, content in raw_changes_for_review.items():
-                if isinstance(content, dict) and "modified" in content:
-                    # Extract functions from the modified code
-                    modified_code = content["modified"]
-                    functions = content["functions"]  # Assuming functions are part of the content dict
+                if isinstance(content, dict) and "functions" in content:
+                    functions = [func for func in content["functions"] if func.get("file_path") == file_path]
+
                     # Clean up code and context fields
                     def clean_html(text):
                         return re.sub(r"<[^>]+>", "", text)  # Remove HTML tags
 
                     # Debugging: Log the extracted functions and their contexts
                     logging.debug(f"Extracted functions for {file_path}: {functions}")
-                    
+
                     changes_for_review[file_path] = [
                         {
                             "name": func["name"],
-                            "code": func["code"],
-                            "context": func["context"],
+                            "code": clean_html(func["code"]),
+                            "context": clean_html(func.get("context", "")),
                         }
                         for func in functions
                     ]
