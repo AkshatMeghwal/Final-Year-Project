@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 def extract_user_defined_functions(js_file):
     """
     Extracts all user-defined functions from a JavaScript file, including their names, parameters, and code,
-    and represents them as JSON objects with keys: name, params, and code.
+    and represents them as JSON objects with keys: name, params, code, and file_path.
     """
     with open(js_file, 'r') as f:
         code = f.read()
@@ -34,14 +34,15 @@ def extract_user_defined_functions(js_file):
         else:
             continue
 
-        # Append the function as a JSON object
+        # Append the function as a JSON object with the file path
         functions.append({
             "name": function_name.strip(),
             "params": [param.strip() for param in function_params],
             "code": function_code.strip(),
             "code_with_docstring": "",
             "context": "",
-            "calls": []  
+            "calls": [],
+            "file_path": js_file  # Add the file path
         })
 
     return functions
@@ -77,9 +78,18 @@ def get_graph_roots(graph):
         list: A list of root nodes for all disjoint graphs.
     """
     roots = []
-    for node in graph.nodes:
-        if graph.in_degree(node) == 0:  # Nodes with no incoming edges are roots
-            roots.append(node)
+    for component in nx.weakly_connected_components(graph):
+        subgraph = graph.subgraph(component)
+        for node in subgraph.nodes:
+            if subgraph.in_degree(node) == 0:  # Nodes with no incoming edges are roots
+                roots.append(node)
+
+    # Include isolated nodes (nodes with no edges at all)
+    isolated_nodes = list(nx.isolates(graph))
+    roots.extend(isolated_nodes)
+
+    # Remove duplicates in case isolated nodes are already included
+    roots = list(set(roots))
     return roots
 
 
@@ -99,20 +109,32 @@ def build_dependency_graph(files: list[file_processing_info]):
     # Build the dependency graph
     graph = nx.DiGraph()
 
+    # Add all functions as nodes
+    for func in all_functions:
+        graph.add_node(func["name"], file_path=func["file_path"])
+
     # Add edges based on function calls
     for func in all_functions:
+        print(f"Processing function: {func['name']}")
         called_funcs = extract_function_calls(func, all_functions)
         for called_func in called_funcs:
             graph.add_edge(func["name"], called_func)  # Add an edge from the current function to the called function
 
+    # Ensure all nodes are part of the graph, even if they are isolated
+    for func in all_functions:
+        if func["name"] not in graph.nodes:
+            graph.add_node(func["name"], file_path=func["file_path"])
+
     # Get roots of all disjoint graphs
     roots = get_graph_roots(graph)
+    print(f"Identified roots: {roots}")
+
     return graph, all_functions, roots
 
 
 def plot_dependency_graph(graph, file_name, folder_name="graph"):
     """
-    Plots the dependency graph using NetworkX and saves it to a file.
+    Plots the combined dependency graph using NetworkX and saves it to a file.
     
     Parameters:
         graph (networkx.DiGraph): The dependency graph to plot.
@@ -126,7 +148,7 @@ def plot_dependency_graph(graph, file_name, folder_name="graph"):
     plt.figure(figsize=(12, 8))
     pos = nx.spring_layout(graph)
     nx.draw(graph, pos, with_labels=True, node_size=2000, node_color="lightblue", font_size=10, font_weight="bold", edge_color="gray")
-    plt.title("Function Dependency Graph")
+    plt.title("Combined Function Dependency Graph")
 
     # Save the graph to the specified file
     file_path = os.path.join(folder_name, file_name)
