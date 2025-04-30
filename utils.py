@@ -27,25 +27,26 @@ class Misc():
 
         codefile_content: str = ""
         try:
+            filepath = filepath.replace("\\", "/")  # Replace backslashes with forward slashes
             with open(filepath, "r", encoding="utf-8") as file:
                 codefile_content = file.read()
         except OSError:
             logging.exception(
                 "Failed to read file. '%s'",
-                filepath.replace(filepath),
+                filepath,
             )
             return codefile_content
         except UnicodeDecodeError:
             logging.exception(
                 "Failed to read file. '%s'",
-                filepath.replace(filepath),
+                filepath,
             )
             return codefile_content
 
         if len(codefile_content) == 0:
             logging.warning(
                 "Empty file. '%s'",
-                filepath.replace(filepath),
+                filepath,
             )
 
         return codefile_content

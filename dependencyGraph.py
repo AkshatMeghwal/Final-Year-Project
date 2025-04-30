@@ -10,8 +10,12 @@ def extract_user_defined_functions(js_file):
     Extracts all user-defined functions from a JavaScript file, including their names, parameters, and code,
     and represents them as JSON objects with keys: name, params, code, and file_path.
     """
-    with open(js_file, 'r') as f:
-        code = f.read()
+    try:
+        with open(js_file, 'r', encoding='utf-8') as f:  # Specify UTF-8 encoding
+            code = f.read()
+    except UnicodeDecodeError:
+        with open(js_file, 'r', encoding='latin-1') as f:  # Fallback to a different encoding
+            code = f.read()
 
     # Regex to match function definitions (traditional and arrow functions)
     function_pattern = re.compile(
