@@ -78,6 +78,7 @@
         const files = {{ graphs | tojson | default('{}') }};
         console.log("Files received from backend:", files); // Debugging log
         let currentFileIndex = 0;
+        const decisions = {}; // Global state to store decisions for all files
 
         function renderFile() {
             const fileKeys = Object.keys(files);
@@ -95,7 +96,7 @@
 
             // Render only the functions of the current file
             if (Array.isArray(functions) && functions.length > 0) {
-                renderFunctions(functions);
+                renderFunctions(fileName, functions);
             } else {
                 document.getElementById("functions-container").innerHTML = "<p>No functions available in this file.</p>";
             }
@@ -104,7 +105,7 @@
             updateNavigationButtons(fileKeys);
         }
 
-        function renderFunctions(functions) {
+        function renderFunctions(fileName, functions) {
             const functionsContainer = document.getElementById("functions-container");
             functionsContainer.innerHTML = "";
 
@@ -156,15 +157,33 @@
         }
 
         function navigateFile(direction) {
+            saveCurrentDecisions(); // Save decisions for the current file
             currentFileIndex += direction;
             renderFile();
         }
 
+        function saveCurrentDecisions() {
+            const fileKeys = Object.keys(files);
+            const fileName = fileKeys[currentFileIndex];
+            const functions = files[fileName];
+
+            decisions[fileName] = {};
+            functions.forEach(func => {
+                const toggle = document.getElementById(`toggle-${func.name}`);
+                const contextBox = document.getElementById(`context-${func.name}`);
+                decisions[fileName][func.name] = {
+                    action: toggle && toggle.checked ? "add" : "skip",
+                    context: contextBox ? contextBox.value : "",
+                };
+            });
+        }
+
         function download() {
+            saveCurrentDecisions(); // Save decisions for the current file before downloading
             fetch("/finalize", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ decisions: collectDecisions() }),
+                body: JSON.stringify({ decisions }),
             })
             .then(response => response.json())
             .then(data => {
@@ -172,26 +191,6 @@
                     window.location.href = data.download_url;
                 }
             });
-        }
-
-        function collectDecisions() {
-            const fileKeys = Object.keys(files);
-            const decisions = {};
-
-            fileKeys.forEach(fileName => {
-                decisions[fileName] = {};
-                const functions = files[fileName];
-
-                functions.forEach(func => {
-                    const toggle = document.getElementById(`toggle-${func.name}`);
-                    const contextBox = document.getElementById(`context-${func.name}`);
-                    decisions[fileName][func.name] = {
-                        action: toggle && toggle.checked ? "add" : "skip",
-                        context: contextBox ? contextBox.value : "",
-                    };
-                });
-            });
-            return decisions;
         }
 
         if (Object.keys(files).length > 0) {

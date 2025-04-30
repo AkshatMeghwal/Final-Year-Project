@@ -7,3 +7,6 @@ __pycache__
 graph
 processed_files
 uploaded_files
+extracted_uploaded_files
+zipped_processed_files
+processed_files_structures
