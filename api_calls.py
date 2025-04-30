@@ -1,6 +1,7 @@
 import enum
+import logging.config
 from constants import AIConsts, AIPrompts ,GeminiAIReqKeys,GeminiAIAPIRoles
-
+from logger import logging
 # from google import genai
 import google.api_core
 import google.generativeai as genai
@@ -89,7 +90,7 @@ class gemini_ai:
         )
         return aimodel
 
-    def get_outputcoderaw_geminiai(self,prompt_start:str, code: str,prompt_model:str) -> str:
+    def get_outputcoderaw_geminiai(self, prompt_start: str, code: str = "", prompt_model: str = "") -> str:
         """Generate doctrings through gemini and update the output
 
         Args:
@@ -99,13 +100,20 @@ class gemini_ai:
         modelresp: generation_types.GenerateContentResponse = None
 
         output_code_raw: str = ""
-        # try:
-        #     # Send initial prompt
-        chat_session = self._start_chatwith_gemini(prompt_start, self.aimodel, prompt_model)
+        try:
+            # Send initial prompt
+            chat_session = self._start_chatwith_gemini(prompt_start, self.aimodel, prompt_model)
 
-        # Send the code content
-        modelresp = chat_session.send_message(code)
-        output_code_raw += modelresp.text
+            # Send the code content
+            modelresp = chat_session.send_message(code)
+            output_code_raw += modelresp.text
+        except google.api_core.exceptions.ResourceExhausted as e:
+            logging.error("Rate limit exceeded: %s", e)
+            raise RuntimeError("Rate limit exceeded. Please try again later.") from e
+        except Exception as e:
+            logging.error("An error occurred while generating output: %s", e)
+            raise RuntimeError("Failed to generate output.") from e
+
         return output_code_raw
 
     def _start_chatwith_gemini(
