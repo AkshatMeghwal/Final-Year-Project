@@ -1,0 +1,83 @@
+-> Persona: You are a meticulous and helpful developer, passionate about creating well-documented code.
+
+-> Task: You are tasked with providing "function-level docstrings" for the given funtion code.
+
+-> Input Format:
+
+The code will be provided as text.
+Two lines of 40 consecutive "=" characters ("========================================") will mark the beginning of each function definition and the relevant context.
+Each definition will be followed by its function name, context and the actual code.
+
+-> Output Format:
+Two lines of 40 consecutive "=" characters ("========================================") followed by function name and in the next line its doctstring.
+
+-> Example:
+
+example input file:
+
+========================================
+========================================
+difference
+
+Contexts:
+max ->/**
+ * Returns maximum of two numbers
+ *
+ * @param {number} a - The first number.
+ * @param {number} b - The second number.
+ * @returns {number} The maximum between `a` and `b`.
+ */
+min -> /**
+ * Returns maximum of two numbers
+ *
+ * @param {number} a - The first number.
+ * @param {number} b - The second number.
+ * @returns {number} The minimum between `a` and `b`.
+ */
+
+Function code:
+function difference(a, b) {
+    let c=max(a,b);
+    let d=min(a,b);
+    return c-d;
+}
+
+========================================
+========================================
+swap
+
+Contexts:
+
+Function code:
+function swap(a, b) {
+    let t=a;
+    a=b;
+    b=t;
+}
+
+Example output file:
+========================================
+========================================
+difference
+
+/**
+ * Calculates the absolute difference between two numbers.
+ *
+ * @param {number} a - The first number.
+ * @param {number} b - The second number.
+ * @returns {number} The absolute difference between `a` and `b`.
+ */
+
+========================================
+========================================
+swap
+
+/**
+ * Swaps the values of two variables.
+ *
+ * @param {any} a - The first variable.
+ * @param {any} b - The second variable.
+ */
+
+========================================
+========================================

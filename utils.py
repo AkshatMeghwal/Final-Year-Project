@@ -160,6 +160,44 @@ class Misc():
             updated_lines.append(line)
 
         return "\n".join(updated_lines)
+    def _extract_output(response: str) -> dict:
+        """
+        Extracts function names and their corresponding docstrings from the AI response.
+
+        Args:
+            response (str): The AI response in the format of a multi-function prompt.
+
+        Returns:
+            dict: A dictionary mapping function names to their docstrings.
+        """
+        function_docstring_map = {}
+        lines = response.split("\n")
+        current_function = None
+        current_docstring = []
+        flag = 0  # Track the current state in the response
+
+        for line in lines:
+            line = line.strip()
+            if line == "========================================":
+                if flag == 1 and current_function and current_docstring:
+                    # Store the function name and its docstring
+                    function_docstring_map[current_function] = "\n".join(current_docstring).strip()
+                # Reset for the next function block
+                current_function = None
+                current_docstring = []
+                flag = 1 if flag == 0 else 0
+            elif flag == 1 and not current_function:
+                # Capture the function name
+                current_function = line
+            elif flag == 1 and current_function:
+                # Capture the docstring
+                current_docstring.append(line)
+
+        # Add the last function-docstring pair if present
+        if current_function and current_docstring:
+            function_docstring_map[current_function] = "\n".join(current_docstring).strip()
+
+        return function_docstring_map
     
     @staticmethod
     def highlight_changes(original: str, modified: str) -> str:
