@@ -75,7 +75,7 @@
     {% endif %}
 
     <script>
-        const files = JSON.parse('{{ graphs | tojson | default("{}") }}');
+        const files = {{ graphs | tojson | default("{}") }}; // Ensure files is a valid JSON object
         console.log("Files received from backend:", files); // Debugging log
         let currentFileIndex = 0;
         const decisions = {}; // Global state to store decisions for all files
