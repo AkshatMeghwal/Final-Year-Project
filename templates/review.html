@@ -75,7 +75,7 @@
     {% endif %}
 
     <script>
-        const files = {{ graphs | tojson | default('{}') }};
+        const files = JSON.parse('{{ graphs | tojson | default("{}") }}');
         console.log("Files received from backend:", files); // Debugging log
         let currentFileIndex = 0;
         const decisions = {}; // Global state to store decisions for all files
@@ -139,18 +139,11 @@
             const downloadButton = document.getElementById("download-button");
 
             if (currentFileIndex === fileKeys.length - 1) {
-                prevButton.style.display = "inline-block";
+                prevButton.style.display = "none"; // Completely hide the Previous button
                 nextButton.style.display = "none";
                 downloadButton.style.display = "inline-block";
-            }
-            else if (currentFileIndex === 0) {
-                prevButton.style.display = "none";
-                nextButton.style.display = "inline-block";
-                downloadButton.style.display = "none";
-            }
-            // On intermediate pages
-            else {
-                prevButton.style.display = "inline-block";
+            } else {
+                prevButton.style.display = "none"; // Always hide the Previous button
                 nextButton.style.display = "inline-block";
                 downloadButton.style.display = "none";
             }
